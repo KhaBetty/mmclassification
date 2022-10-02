@@ -1,5 +1,8 @@
 import cv2
 import numpy as np
+import glob
+import os
+
 
 
 def pad_vector(vector, how, depth, constant_value=0):
@@ -23,6 +26,12 @@ def pad_vector(vector, how, depth, constant_value=0):
 
 def image_compare(image1, image2):
 	print(np.max((image1 - image2)))
+
+def load_images():
+	result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(r"C:\Users\eyalg\Desktop\pics\dataset\training_set")
+			  for f in filenames if os.path.splitext(f)[1] == '.jpg']
+	return result
+
 
 if __name__ == '__main__':
 	image = cv2.imread('dog_gray_resized.jpg', cv2.IMREAD_GRAYSCALE)
