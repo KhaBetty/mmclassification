@@ -73,7 +73,6 @@ def resize_images_and_save(list_of_images,path_resized,path_shifted):
 
     return resized, resized_and_shifted
 
-
 if __name__ == '__main__':
     path_list = load_image_paths(r"C:\Users\eyalg\Desktop\pics\dataset\training_set\cats")
     images = load_images(path_list)
