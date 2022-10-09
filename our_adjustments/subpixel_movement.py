@@ -40,7 +40,7 @@ def load_image_paths(path):
 #get the paths and load the images with Imread
 def load_images(paths_list):
     list_of_images=[]
-    print("list size" + str(len(paths_list)))
+    #print("list size" + str(len(paths_list)))
     for path in paths_list:
         image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         list_of_images.append(image)
@@ -56,7 +56,8 @@ def resize_images_and_save(list_of_images,path_resized,path_shifted):
         resized_image = cv2.resize(image, (128, 128), interpolation=cv2.INTER_LINEAR)
         #print(image.shape)
         #print(type(image))
-        #shifted_image = np.asarray(pad_vector(vector=np.asmatrix(image), how=random_direction(), depth=1))
+        direction = random_direction()
+        shifted_image = np.asarray(pad_vector(vector=np.asmatrix(image), how=direction, depth=1), dtype='uint8')
         #print(resized_image.shape)
         #print(shifted_image.shape)
         #print(type(resized_image))
@@ -64,19 +65,19 @@ def resize_images_and_save(list_of_images,path_resized,path_shifted):
         #cv2.imshow('resized_image', image)
         #cv2.waitKey(0)
 
-        #shifted_resized_image=cv2.resize(shifted_image, (128, 128), interpolation=cv2.INTER_LINEAR)
+        shifted_resized_image=cv2.resize(shifted_image, (128, 128), interpolation=cv2.INTER_LINEAR)
         resized.append(resized_image)
-        #resized_and_shifted.append(shifted_resized_image)
-        cv2.imwrite(path_resized + str(i) +'.jpg', resized_image)
-        #cv2.imwrite(path_shifted + str(i) +'.jpg', shifted_resized_image)
+        resized_and_shifted.append(shifted_resized_image)
+        #cv2.imwrite(path_resized + str(i) +'.jpg', resized_image)
+        cv2.imwrite(path_shifted + str(i) +'.jpg', shifted_resized_image)
         i = i+1
 
     return resized, resized_and_shifted
 
 if __name__ == '__main__':
-    path_list = load_image_paths(r"C:\Users\eyalg\Desktop\pics\dataset\training_set\cats")
+    path_list = load_image_paths(r"C:\Users\eyalg\Desktop\pics\dataset\test_set\cats")
     images = load_images(path_list)
-    tup = resize_images_and_save(images, r"C:\Users\eyalg\Desktop\pics\resized\training_set\cats\cat", r"C:\Users\eyalg\Desktop\pics\shifted_and_resized\training_set\cats\cat")
+    tup = resize_images_and_save(images, r"C:\Users\eyalg\Desktop\pics\resized\test_set\cats\cat", r"C:\Users\eyalg\Desktop\pics\shifted_and_resized\test_set\cats\cat")
 #load from - r"C:\Users\eyalg\Desktop\pics\dataset\training_set\dogs"
 #save resize to - r"C:\Users\eyalg\Desktop\pics\resized\training_set\dogs"
 #save shifted to - r"C:\Users\eyalg\Desktop\pics\shifted_and_resized\training_set\dogs"
