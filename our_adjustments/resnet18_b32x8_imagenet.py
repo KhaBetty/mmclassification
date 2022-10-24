@@ -6,7 +6,26 @@ _deprecation_ = dict(
 )
 
 dataset_type = 'CustomDataset'
-classes = ['cat', 'dog']  # The category names of your dataset
+
+model = dict(
+    type='ImageClassifier',
+    backbone=dict(
+        type='ResNet',
+        depth=18,
+        num_stages=4,
+        out_indices=(3, ),
+        style='pytorch'),
+    neck=dict(type='GlobalAveragePooling'),
+    head=dict(
+        type= 'LinearClsHead',
+        num_classes=2,
+        in_channels=512,
+        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+        topk=(1, 5),
+    ))
+
+
+classes = ['cats', 'dogs']  # The category names of your dataset
 
 dataset_prefix = '/home/maya/Pictures/projA_pics/dataset'
 
@@ -45,3 +64,14 @@ data = dict(
         #         dict(type='Collect', keys=['img'])]
     )
 )
+evaluation = dict(interval=1, metric='accuracy', metric_options= {'topk': (1, )})
+
+# wandb.config = {
+#   "learning_rate": 0.001,
+#   "epochs": 100,
+#   "batch_size": 128
+# }
+
+work_dir ='/home/maya/Pictures/projA_pics/out_files_run_1_resnet'
+
+runner = dict(type='EpochBasedRunner', max_epochs=100)
