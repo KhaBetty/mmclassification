@@ -27,7 +27,7 @@ model = dict(
 
 classes = ['cats', 'dogs']  # The category names of your dataset
 
-dataset_prefix = '/home/maya/Pictures/projA_pics/dataset'
+dataset_prefix = '/home/maya/Pictures/projA_pics/dataset_balanced' #/home/maya/Pictures/projA_pics/dataset'
 
 data = dict(
     train=dict(
@@ -72,6 +72,30 @@ evaluation = dict(interval=1, metric='accuracy', metric_options= {'topk': (1, )}
 #   "batch_size": 128
 # }
 
-work_dir ='/home/maya/Pictures/projA_pics/out_files_run_1_resnet'
+work_dir ='/home/maya/projA/runs/original_dataset_balanced_run'
 
+runner = dict(type='EpochBasedRunner', max_epochs=100)
+
+log_config = dict(
+    interval=5,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='TensorboardLoggerHook', log_dir=work_dir +'/logs'),
+        dict(type='MMClsWandbHook',
+             init_kwargs={
+                 #'entity': "proj_a@walla.com",
+                 'project': "basic_train",
+                 'dir': dataset_prefix #"/home/maya/projA/runs/original_dataset"
+             },
+             log_checkpoint=True,
+             log_checkpoint_metadata=True,
+             num_eval_images=100)#a multiple of 2
+
+    ])
+
+# optimizer
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+# learning policy
+lr_config = dict(policy='step', step=[30, 60, 90])
 runner = dict(type='EpochBasedRunner', max_epochs=100)

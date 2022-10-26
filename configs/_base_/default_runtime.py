@@ -1,11 +1,13 @@
 # checkpoint saving
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=20, )
+#checkpoint_config = dict(interval=1, CLASSES=['cat', 'dog'])
+
 # yapf:disable
 log_config = dict(
-    interval=100,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')#, log_dir='/home/maya/Pictures/projA_pics/out_files_run_1_resnet/logs')
     ])
 # yapf:enable
 
