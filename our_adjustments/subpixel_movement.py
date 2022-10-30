@@ -53,7 +53,7 @@ def resize_images_and_save(list_of_images,path_resized,path_shifted):
     resized_and_shifted=[]
     i=1
     for image in list_of_images:
-        resized_image = cv2.resize(image, (128, 128), interpolation=cv2.INTER_LINEAR)
+        resized_image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_LINEAR)
         #print(image.shape)
         #print(type(image))
         direction = random_direction()
@@ -69,7 +69,7 @@ def resize_images_and_save(list_of_images,path_resized,path_shifted):
         #cv2.imshow('resized_image', image)
         #cv2.waitKey(0)
 
-        shifted_resized_image=cv2.resize(shifted_image, (128, 128), interpolation=cv2.INTER_LINEAR)
+        shifted_resized_image=cv2.resize(shifted_image, (64, 64), interpolation=cv2.INTER_LINEAR)
         resized.append(resized_image)
         resized_and_shifted.append(shifted_resized_image)
         cv2.imwrite(path_resized + str(i) +'.jpg', resized_image)
@@ -79,9 +79,9 @@ def resize_images_and_save(list_of_images,path_resized,path_shifted):
     return resized, resized_and_shifted
 
 if __name__ == '__main__':
-    path_list = load_image_paths(r"C:\Users\eyalg\Desktop\pics\dataset\validation_set\dogs")
+    path_list = load_image_paths(r"C:\Users\eyalg\Desktop\fixed_pics\original\test_set\cats")
     images = load_images(path_list)
-    tup = resize_images_and_save(images, r"C:\Users\eyalg\Desktop\pics\color\resized\validation_set\dogs\dog", r"C:\Users\eyalg\Desktop\pics\color\shifted_and_resized\validation_set\dogs\dog")
+    tup = resize_images_and_save(images, r"C:\Users\eyalg\Desktop\fixed_pics\resized_64\test_set\cats\cat", r"C:\Users\eyalg\Desktop\fixed_pics\shifted_and_resized_64\test_set\cats\cat")
 #load from - r"C:\Users\eyalg\Desktop\pics\dataset\training_set\dogs"
 #save resize to - r"C:\Users\eyalg\Desktop\pics\resized\training_set\dogs"
 #save shifted to - r"C:\Users\eyalg\Desktop\pics\shifted_and_resized\training_set\dogs"
