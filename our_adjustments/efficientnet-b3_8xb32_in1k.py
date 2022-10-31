@@ -21,36 +21,16 @@ dataset_type = 'CustomDataset'
 
 classes = ['cats', 'dogs']  # The category names of your dataset
 
-dataset_prefix = '/home/maya/Pictures/projA_pics/fixed_pics/resized'
-    #TODO '/home/maya/Pictures/projA_pics/dataset_balanced'
+dataset_prefix = '/home/maya/Pictures/projA_pics/fixed_pics/resized_64' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
 # #/home/maya/Pictures/projA_pics/dataset'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
-train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='Resize', size=(224, -1)),
-    #dict(type='CenterCrop', crop_size=224),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='ImageToTensor', keys=['img']),
-    dict(type='ToTensor', keys=['gt_label']),
-    dict(type='Collect', keys=['img', 'gt_label'])
-]
-test_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='Resize', size=(224, -1)),
-    #dict(type='CenterCrop', crop_size=224),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='ImageToTensor', keys=['img']),
-    dict(type='Collect', keys=['img'])
-]
-
-
 # train_pipeline = [
 #     dict(type='LoadImageFromFile'),
-#     dict(type='RandomResizedCrop', size=224),
-#     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
+#     dict(type='Resize', size=224),
+#     #dict(type='CenterCrop', crop_size=224),
 #     dict(type='Normalize', **img_norm_cfg),
 #     dict(type='ImageToTensor', keys=['img']),
 #     dict(type='ToTensor', keys=['gt_label']),
@@ -58,12 +38,31 @@ test_pipeline = [
 # ]
 # test_pipeline = [
 #     dict(type='LoadImageFromFile'),
-#     dict(type='Resize', size=(256, -1)),
-#     dict(type='CenterCrop', crop_size=224),
+#     dict(type='Resize', size=224),
+#     #dict(type='CenterCrop', crop_size=224),
 #     dict(type='Normalize', **img_norm_cfg),
 #     dict(type='ImageToTensor', keys=['img']),
 #     dict(type='Collect', keys=['img'])
 # ]
+
+
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='RandomResizedCrop', size=224),
+    dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='ToTensor', keys=['gt_label']),
+    dict(type='Collect', keys=['img', 'gt_label'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='Resize', size=(256, -1)),
+    dict(type='CenterCrop', crop_size=224),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='Collect', keys=['img'])
+]
 
 data = dict(
     train=dict(
@@ -96,7 +95,7 @@ evaluation = dict(interval=1, metric='accuracy', metric_options= {'topk': (1, )}
 #   "batch_size": 128
 # }
 
-work_dir ='/home/maya/projA/runs/resized_run_effecientnet' #TODO '/home/maya/projA/runs/original_run_effecientnet'
+work_dir = '/home/maya/projA/runs/resized_64_run_effecientnet_cropped' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
 
 log_config = dict(
     interval=5,
