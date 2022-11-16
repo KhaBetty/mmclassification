@@ -3,7 +3,6 @@ import numpy as np
 import glob
 import os
 import random
-import tqdm
 
 
 def pad_vector(vector, how, depth, constant_value=0):
@@ -62,7 +61,7 @@ def sub_pixel_creator(image, path, num_of_images, image_num):
             edited_image = np.asarray(pad_vector(vector=np.asmatrix(edited_image[:, :]), how=direction, depth=1),
                                       dtype='uint8')  # gray scale image , two dim
         edited_image = cv2.resize(edited_image, (64, 64), interpolation=cv2.INTER_LINEAR)
-        cv2.imwrite(path_images + '_' + str(i) + '.jpg', edited_image)
+        cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
 
 
 # get the list of images and return a tuple: 1st element is resized images, 2nd element is shifted and resized images
@@ -95,10 +94,15 @@ def resize_images_and_save(list_of_images, path_resized, path_shifted):
 
 
 if __name__ == '__main__':
-    path_list = load_image_paths(r"C:\Users\eyalg\Desktop\fixed_pics\original\test_set\cats")
+    # orig_img =['cats', 'dogs']
+    #     #['test_set/cats','test_set/dogs', 'training_set/dogs', 'training_set/cats','validation_set/dogs', 'validation_set/cats']
+    # section = 'test_set/'
+    # for orig_dir in orig_img:
+    path_list = load_image_paths("/home/maya/Pictures/projA_pics/dataset_balanced/" + section +orig_dir)
     images = load_images(path_list)
-    tup = resize_images_and_save(images, r"C:\Users\eyalg\Desktop\fixed_pics\bla\cats\cat",
-                                 r"C:\Users\eyalg\Desktop\fixed_pics\bla\our_mission\cats\cat")
+
+    tup = resize_images_and_save(images, '',
+                             '/home/maya/Pictures/projA_pics/subpixel_trial/cats/cat')
 # load from - r"C:\Users\eyalg\Desktop\pics\dataset\training_set\dogs"
 # save resize to - r"C:\Users\eyalg\Desktop\pics\resized\training_set\dogs"
 # save shifted to - r"C:\Users\eyalg\Desktop\pics\shifted_and_resized\training_set\dogs"
