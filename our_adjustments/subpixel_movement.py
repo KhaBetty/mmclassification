@@ -63,6 +63,13 @@ def sub_pixel_creator(image, path, num_of_images, image_num):
         edited_image = cv2.resize(edited_image, (64, 64), interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
 
+def resized_creator(image, path, image_num):
+    edited_image = image
+    edited_image = cv2.resize(edited_image, (64, 64), interpolation=cv2.INTER_LINEAR)
+    path = path + str(image_num) + '.jpg'
+    cv2.imwrite(path, edited_image)
+
+
 
 # get the list of images and return a tuple: 1st element is resized images, 2nd element is shifted and resized images
 def resize_images_and_save(list_of_images, path_resized, path_shifted):
@@ -71,8 +78,10 @@ def resize_images_and_save(list_of_images, path_resized, path_shifted):
     num_moved_images = 4
 
     for counter, image in enumerate(list_of_images):
-       # resized_image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_LINEAR)
-        sub_pixel_creator(image, path_shifted, num_moved_images, counter+1)
+        sub_pixel_creator(image, path_shifted, num_moved_images, counter + 1)
+        resized_creator(image, path_resized, counter + 1)
+
+        # resized_image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_LINEAR)
         # print(image.shape)
         # print(type(image))
         #
@@ -87,7 +96,7 @@ def resize_images_and_save(list_of_images, path_resized, path_shifted):
         # shifted_resized_image=cv2.resize(shifted_image, (64, 64), interpolation=cv2.INTER_LINEAR)
         # resized.append(resized_image)
         # resized_and_shifted.append(shifted_resized_image)
-       # cv2.imwrite(path_resized + str(i) + '.jpg', resized_image)
+        # cv2.imwrite(path_resized + str(i) + '.jpg', resized_image)
         # cv2.imwrite(path_shifted + str(i) +'.jpg', shifted_resized_image)
 
     #return resized, resized_and_shifted
@@ -96,13 +105,30 @@ def resize_images_and_save(list_of_images, path_resized, path_shifted):
 if __name__ == '__main__':
     # orig_img =['cats', 'dogs']
     #     #['test_set/cats','test_set/dogs', 'training_set/dogs', 'training_set/cats','validation_set/dogs', 'validation_set/cats']
-    # section = 'test_set/'
-    # for orig_dir in orig_img:
-    path_list = load_image_paths("/home/maya/Pictures/projA_pics/dataset_balanced/" + section +orig_dir)
+
+    path_list = load_image_paths("/home/maya/Pictures/projA_pics/dataset_balanced/test_set/cats")
     images = load_images(path_list)
 
-    tup = resize_images_and_save(images, '',
-                             '/home/maya/Pictures/projA_pics/subpixel_trial/cats/cat')
+    #tup = resize_images_and_save(images, '/home/maya/Pictures/projA_pics/resized/test_set/cats/cat',
+             #                '/home/maya/Pictures/projA_pics/subpixel_trial/test_set/cats/cat')
+
+    sets = ["training_set","validation_set","test_set"]
+    animals =["cat" , "dog"]
+    for data_set in sets:
+        for animal in animals:
+            path_list = load_image_paths("/home/maya/Pictures/projA_pics/dataset_balanced" + '/' + data_set + '/' + animal + 's')
+            images = load_images(path_list)
+            resized_path = ("/home/maya/Pictures/projA_pics/resized" + '/' + data_set +'/' + animal + 's/' + animal)
+            subpixel_path = ("/home/maya/Pictures/projA_pics/subpixel" + '/' + data_set + '/' + animal + 's/' + animal)
+            resize_images_and_save(images,resized_path,subpixel_path)
+
+
+
+
+
+
+
+
 # load from - r"C:\Users\eyalg\Desktop\pics\dataset\training_set\dogs"
 # save resize to - r"C:\Users\eyalg\Desktop\pics\resized\training_set\dogs"
 # save shifted to - r"C:\Users\eyalg\Desktop\pics\shifted_and_resized\training_set\dogs"
