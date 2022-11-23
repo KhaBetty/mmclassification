@@ -46,7 +46,7 @@ def load_images(paths_list):
     list_of_images = []
     # print("list size" + str(len(paths_list)))
     for path in paths_list:
-        image = cv2.imread(path)#, cv2.IMREAD_GRAYSCALE)
+        image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         list_of_images.append(image)
     return list_of_images
 
