@@ -11,6 +11,7 @@ import torch
 import torch.distributed as dist
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
+from mmcv.cnn.bricks.conv2d_adaptive_padding import Conv2dAdaptivePadding as conv_layer
 
 from mmcls import __version__
 from mmcls.apis import init_random_seed, set_random_seed, train_model
@@ -87,7 +88,7 @@ def parse_args():
     return args
 
 
-def main():
+def main(our_adjustments, image_num):
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
@@ -173,7 +174,14 @@ def main():
     meta['seed'] = seed
 
     model = build_classifier(cfg.model)
+
     model.init_weights()
+
+    if our_adjustments:
+        tmp_weights = torch.randn((40,image_num,3,3),requires_grad=True)
+        new_layer = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
+        new_layer.weight = torch.nn.parameter.Parameter(tmp_weights)
+        model.backbone.layers[0].conv = new_layer
 
     #init w&b
     #wandb.init(project="regular-training")
@@ -205,4 +213,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    our_adjustments =True
+    image_num = 1
+    main(our_adjustments,image_num)
