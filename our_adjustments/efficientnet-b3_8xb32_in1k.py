@@ -4,12 +4,14 @@ _base_ = [
     '../configs/_base_/schedules/imagenet_bs256.py',
     '../configs/_base_/default_runtime.py',
 ]
-work_dir = '/home/maya/projA/runs/original_run_effecientnet_cropped' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/fixed_pics/original' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
+work_dir = '/home/elizabetheyal/projA/runs/original_with_pth' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/elizabetheyal/Pictures/projA_pics/dataset' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
 
 model = dict(
     type='ImageClassifier',
-    backbone=dict(type='EfficientNet', arch='b3'),
+    backbone=dict(type='EfficientNet', arch='b3',
+                  init_cfg = dict(type='Pretrained',
+                    checkpoint='efficientnet-b3_3rdparty_8xb32_in1k_20220119-4b4d7487.pth')),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -106,7 +108,7 @@ log_config = dict(
         dict(type='MMClsWandbHook',
              init_kwargs={
                  #'entity': "proj_a@walla.com",
-                 'project': "basic_train",
+                 'project': "gray_train",
                  'dir': work_dir #"/home/maya/projA/runs/original_dataset"
              },
              log_checkpoint=True,
