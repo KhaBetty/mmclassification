@@ -9,7 +9,10 @@ dataset_prefix = '/home/maya/Pictures/projA_pics/fixed_pics/original' #'/home/ma
 
 model = dict(
     type='ImageClassifier',
-    backbone=dict(type='EfficientNet', arch='b3'),
+    backbone=dict(type='EfficientNet', arch='b3',
+                  init_cfg = dict(type='Pretrained',
+                    checkpoint='our_adjustments/efficientnet-b3_3rdparty_8xb32_in1k_20220119-4b4d7487.pth')
+    ),
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
