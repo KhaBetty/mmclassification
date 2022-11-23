@@ -46,7 +46,7 @@ def load_images(paths_list):
     list_of_images = []
     # print("list size" + str(len(paths_list)))
     for path in paths_list:
-        image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        image = cv2.imread(path)#, cv2.IMREAD_GRAYSCALE)
         list_of_images.append(image)
     return list_of_images
 
@@ -63,64 +63,43 @@ def sub_pixel_creator(image, path, num_of_images, image_num):
         edited_image = cv2.resize(edited_image, (64, 64), interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
 
-def resized_creator(image, path, image_num):
+def resized_creator(image, path, image_num, size):
     edited_image = image
-    edited_image = cv2.resize(edited_image, (64, 64), interpolation=cv2.INTER_LINEAR)
+    edited_image = cv2.resize(edited_image, (size, size), interpolation=cv2.INTER_LINEAR)
+    path = path + str(image_num) + '.jpg'
+    cv2.imwrite(path, edited_image)
+def original_grey_creator(image, path, image_num):
+    edited_image = image
     path = path + str(image_num) + '.jpg'
     cv2.imwrite(path, edited_image)
 
 
 
 # get the list of images and return a tuple: 1st element is resized images, 2nd element is shifted and resized images
-def resize_images_and_save(list_of_images, path_resized, path_shifted):
-    resized = []
-    resized_and_shifted = []
-    num_moved_images = 4
-
-    for counter, image in enumerate(list_of_images):
-        sub_pixel_creator(image, path_shifted, num_moved_images, counter + 1)
-        resized_creator(image, path_resized, counter + 1)
-
-        # resized_image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_LINEAR)
-        # print(image.shape)
-        # print(type(image))
-        #
-        # direction = random_direction() temp=np.asarray(pad_vector(vector=np.asmatrix(image[:,:,0]), how=direction,
-        # depth=1), dtype='uint8') shifted_image=np.empty((temp.shape[0],temp.shape[1],3)) shifted_image[:,:,
-        # 0] = np.asarray(pad_vector(vector=np.asmatrix(image[:,:,0]), how=direction, depth=1), dtype='uint8')
-        # shifted_image[:,:,1] = np.asarray(pad_vector(vector=np.asmatrix(image[:, :, 1]), how=direction, depth=1),
-        # dtype='uint8') shifted_image[:,:,2] = np.asarray(pad_vector(vector=np.asmatrix(image[:, :, 2]),
-        # how=direction, depth=1), dtype='uint8') #print(resized_image.shape) print(shifted_image.shape) print(type(
-        # resized_image)) print(type(shifted_image)) cv2.imshow('resized_image', image) #cv2.waitKey(0)
-        #
-        # shifted_resized_image=cv2.resize(shifted_image, (64, 64), interpolation=cv2.INTER_LINEAR)
-        # resized.append(resized_image)
-        # resized_and_shifted.append(shifted_resized_image)
-        # cv2.imwrite(path_resized + str(i) + '.jpg', resized_image)
-        # cv2.imwrite(path_shifted + str(i) +'.jpg', shifted_resized_image)
-
-    #return resized, resized_and_shifted
-
 
 if __name__ == '__main__':
-    # orig_img =['cats', 'dogs']
-    #     #['test_set/cats','test_set/dogs', 'training_set/dogs', 'training_set/cats','validation_set/dogs', 'validation_set/cats']
 
-    path_list = load_image_paths("/home/maya/Pictures/projA_pics/dataset_balanced/test_set/cats")
-    images = load_images(path_list)
-
-    #tup = resize_images_and_save(images, '/home/maya/Pictures/projA_pics/resized/test_set/cats/cat',
-             #                '/home/maya/Pictures/projA_pics/subpixel_trial/test_set/cats/cat')
+    main_path="/home/maya/Pictures/projA_pics/"
+    num_subpixel_images = 4
 
     sets = ["training_set","validation_set","test_set"]
     animals =["cat" , "dog"]
     for data_set in sets:
         for animal in animals:
-            path_list = load_image_paths("/home/maya/Pictures/projA_pics/dataset_balanced" + '/' + data_set + '/' + animal + 's')
+
+            path_list = load_image_paths(main_path + "dataset_balanced" + '/' + data_set + '/' + animal + 's')
             images = load_images(path_list)
-            resized_path = ("/home/maya/Pictures/projA_pics/resized" + '/' + data_set +'/' + animal + 's/' + animal)
-            subpixel_path = ("/home/maya/Pictures/projA_pics/subpixel" + '/' + data_set + '/' + animal + 's/' + animal)
-            resize_images_and_save(images,resized_path,subpixel_path)
+            orig_grey_path = (main_path + "orig_color" + '/' + data_set +'/' + animal + 's/' + animal)
+            resized_path = (main_path + "resized_32" + '/' + data_set +'/' + animal + 's/' + animal)
+            subpixel_path = (main_path + "subpixel" + '/' + data_set + '/' + animal + 's/' + animal)
+            for counter, image in enumerate(images):
+               # sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1)
+               # resized_creator(image, resized_path, counter + 1, 32)
+                original_grey_creator(image, orig_grey_path, counter + 1)
+    # resize_images_and_save(images,orig_grey_path,resized_path,subpixel_path)
+
+
+
 
 
 # load from - r"C:\Users\eyalg\Desktop\pics\dataset\training_set\dogs"
