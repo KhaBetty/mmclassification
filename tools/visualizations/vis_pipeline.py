@@ -164,6 +164,7 @@ def build_dataset_pipelines(cfg, phase):
 
 def prepare_imgs(args, imgs: List[np.ndarray], steps=None):
     """prepare the showing picture."""
+    imgs = [img[:,:,np.newaxis] for img in imgs]
     ori_shapes = [img.shape for img in imgs]
     # adaptive adjustment to rescale pictures
     if args.adaptive:

@@ -11,6 +11,7 @@ from mmcv import DictAction
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
 
+from mmcv.cnn.bricks.conv2d_adaptive_padding import Conv2dAdaptivePadding as conv_layer
 from mmcls.apis import multi_gpu_test, single_gpu_test
 from mmcls.datasets import build_dataloader, build_dataset
 from mmcls.models import build_classifier
@@ -104,7 +105,7 @@ def parse_args():
     return args
 
 
-def main():
+def main(our_adjustments, image_num):
     args = parse_args()
 
     cfg = mmcv.Config.fromfile(args.config)
@@ -165,9 +166,13 @@ def main():
 
     # build the model and load checkpoint
     model = build_classifier(cfg.model)
+    if our_adjustments:
+        model.backbone.layers[0].conv = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
+
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
+
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
 
     if 'CLASSES' in checkpoint.get('meta', {}):
@@ -243,4 +248,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    our_adjustments = True
+    image_num = 1
+    main(our_adjustments, image_num)

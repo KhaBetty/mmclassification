@@ -51,7 +51,7 @@ def load_images(paths_list):
     return list_of_images
 
 
-def sub_pixel_creator(image, path, num_of_images, image_num):
+def sub_pixel_creator(image, path, num_of_images, image_num, size):
     path_images = path + str(image_num)
     os.mkdir(path_images)  # take of the image extension
     for i in range(1, num_of_images + 1):
@@ -60,7 +60,7 @@ def sub_pixel_creator(image, path, num_of_images, image_num):
             direction = random_direction()
             edited_image = np.asarray(pad_vector(vector=np.asmatrix(edited_image[:, :]), how=direction, depth=1),
                                       dtype='uint8')  # gray scale image , two dim
-        edited_image = cv2.resize(edited_image, (64, 64), interpolation=cv2.INTER_LINEAR)
+        edited_image = cv2.resize(edited_image, (size, size), interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
 
 def resized_creator(image, path, image_num, size):
@@ -89,13 +89,13 @@ if __name__ == '__main__':
 
             path_list = load_image_paths(main_path + "dataset_balanced" + '/' + data_set + '/' + animal + 's')
             images = load_images(path_list)
-            orig_grey_path = (main_path + "orig_color" + '/' + data_set +'/' + animal + 's/' + animal)
+            orig_grey_path = (main_path + "orig_grey" + '/' + data_set +'/' + animal + 's/' + animal)
             resized_path = (main_path + "resized_32" + '/' + data_set +'/' + animal + 's/' + animal)
-            subpixel_path = (main_path + "subpixel" + '/' + data_set + '/' + animal + 's/' + animal)
+            subpixel_path = (main_path + "subpixel_32_4" + '/' + data_set + '/' + animal + 's/' + animal)
             for counter, image in enumerate(images):
-               # sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1)
-               # resized_creator(image, resized_path, counter + 1, 32)
-                original_grey_creator(image, orig_grey_path, counter + 1)
+                sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1,32)
+             #   resized_creator(image, resized_path, counter + 1, 32)
+               # original_grey_creator(image, orig_grey_path, counter + 1)
     # resize_images_and_save(images,orig_grey_path,resized_path,subpixel_path)
 
 

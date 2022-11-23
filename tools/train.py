@@ -6,6 +6,7 @@ import os.path as osp
 import time
 import warnings
 
+import numpy as np
 import mmcv
 import torch
 import torch.distributed as dist
@@ -178,7 +179,8 @@ def main(our_adjustments, image_num):
     model.init_weights()
 
     if our_adjustments:
-        tmp_weights = torch.randn((40,image_num,3,3),requires_grad=True)
+        tmp_weights = torch.FloatTensor(40,image_num,3,3).uniform_(-1/np.sqrt(3*3*image_num*40),1/np.sqrt(3*3*image_num*40))
+            #torch.randn((40,image_num,3,3),requires_grad=True)
         new_layer = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
         new_layer.weight = torch.nn.parameter.Parameter(tmp_weights)
         model.backbone.layers[0].conv = new_layer

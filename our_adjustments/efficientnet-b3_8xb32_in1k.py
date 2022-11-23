@@ -1,18 +1,21 @@
+import cv2
 _base_ = [
     '../configs/_base_/models/efficientnet_b3.py',
     '../configs/_base_/datasets/imagenet_bs32.py',
     '../configs/_base_/schedules/imagenet_bs256.py',
     '../configs/_base_/default_runtime.py',
 ]
-work_dir = '/home/maya/projA/runs/original_run_effecientnet_cropped' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/fixed_pics/original' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
+#TODO resized gray images
+work_dir = '/home/maya/projA/runs_gray/tmp' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/maya/Pictures/projA_pics/resized_32' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
 
 model = dict(
     type='ImageClassifier',
-    backbone=dict(type='EfficientNet', arch='b3',
-                  init_cfg = dict(type='Pretrained',
-                    checkpoint='our_adjustments/efficientnet-b3_3rdparty_8xb32_in1k_20220119-4b4d7487.pth')
-    ),
+    backbone=dict(type='EfficientNet', arch='b3')
+    # ,
+    #               init_cfg = dict(type='Pretrained',
+    #                 checkpoint='../our_adjustments/efficientnet-b3_3rdparty_8xb32_in1k_20220119-4b4d7487.pth')
+    ,
     neck=dict(type='GlobalAveragePooling'),
     head=dict(
         type='LinearClsHead',
@@ -29,8 +32,6 @@ classes = ['cats', 'dogs']  # The category names of your dataset
 
 # #/home/maya/Pictures/projA_pics/dataset'
 
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 # train_pipeline = [
 #     dict(type='LoadImageFromFile'),
@@ -50,9 +51,37 @@ img_norm_cfg = dict(
 #     dict(type='Collect', keys=['img'])
 # ]
 
+#RGB
+
+# img_norm_cfg = dict(
+#     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+#
+# train_pipeline = [
+#     dict(type='LoadImageFromFile'),
+#     dict(type='RandomResizedCrop', size=224),
+#     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
+#     dict(type='Normalize', **img_norm_cfg),
+#     dict(type='ImageToTensor', keys=['img']),
+#     dict(type='ToTensor', keys=['gt_label']),
+#     dict(type='Collect', keys=['img', 'gt_label'])
+# ]
+# test_pipeline = [
+#     dict(type='LoadImageFromFile'),
+#     dict(type='Resize', size=(256, -1)),
+#     dict(type='CenterCrop', crop_size=224),
+#     dict(type='Normalize', **img_norm_cfg),
+#     dict(type='ImageToTensor', keys=['img']),
+#     dict(type='Collect', keys=['img'])
+# ]
+
+
+
+#Grey
+img_norm_cfg = dict(
+    mean=[114.495], std=[57.6], to_rgb=False)
 
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
@@ -61,7 +90,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='Resize', size=(256, -1)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -109,7 +138,7 @@ log_config = dict(
         dict(type='MMClsWandbHook',
              init_kwargs={
                  #'entity': "proj_a@walla.com",
-                 'project': "basic_train",
+                 'project': "gray_train",
                  'dir': work_dir #"/home/maya/projA/runs/original_dataset"
              },
              log_checkpoint=True,
