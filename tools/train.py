@@ -216,5 +216,5 @@ def main(our_adjustments, image_num):
 
 if __name__ == '__main__':
     our_adjustments =True
-    image_num = 1
+    image_num = 8
     main(our_adjustments,image_num)

@@ -6,8 +6,8 @@ _base_ = [
     '../configs/_base_/default_runtime.py',
 ]
 #TODO resized gray images
-work_dir = '/home/maya/projA/runs_gray/tmp' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/resized_32' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
+work_dir = '/home/maya/projA/code_tests/try_with_tensorboard' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_8' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
 
 model = dict(
     type='ImageClassifier',
@@ -78,10 +78,11 @@ classes = ['cats', 'dogs']  # The category names of your dataset
 
 #Grey
 img_norm_cfg = dict(
-    mean=[114.495], std=[57.6], to_rgb=False)
+    mean=[114.495,114.495,114.495,114.495,114.495,114.495,114.495,114.495],
+    std=[57.6,57.6,57.6,57.6,57.6,57.6,57.6,57.6], to_rgb=False)
 
 train_pipeline = [
-    dict(type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),#'LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),   #
     dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
@@ -90,7 +91,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),#'LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),   #'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='Resize', size=(256, -1)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -122,7 +123,6 @@ data = dict(
     )
 )
 evaluation = dict(interval=1, metric='accuracy', metric_options= {'topk': (1, )})
-
 # wandb.config = {
 #   "learning_rate": 0.001,
 #   "epochs": 100,
@@ -135,15 +135,15 @@ log_config = dict(
     hooks=[
         dict(type='TextLoggerHook'),
         dict(type='TensorboardLoggerHook', log_dir=work_dir +'/logs'),
-        dict(type='MMClsWandbHook',
-             init_kwargs={
-                 #'entity': "proj_a@walla.com",
-                 'project': "gray_train",
-                 'dir': work_dir #"/home/maya/projA/runs/original_dataset"
-             },
-             log_checkpoint=True,
-             log_checkpoint_metadata=True,
-             num_eval_images=100)#a multiple of 2
+        # dict(type='MMClsWandbHook',
+        #      init_kwargs={
+        #          #'entity': "proj_a@walla.com",
+        #          'project': "gray_train",
+        #          'dir': work_dir #"/home/maya/projA/runs/original_dataset"
+        #      },
+        #      log_checkpoint=True,
+        #      log_checkpoint_metadata=True,
+        #      num_eval_images=100)#a multiple of 2
 
     ])
 
@@ -153,3 +153,5 @@ optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(policy='step', step=[30, 60])#, 90])
 runner = dict(type='EpochBasedRunner', max_epochs= 62)#100)
+
+workflow = [('train', 1)]
