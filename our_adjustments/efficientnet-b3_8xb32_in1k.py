@@ -11,7 +11,7 @@ dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_8' #'/home/maya/Pic
 multi_image_flag = True
 multi_num= 8 #number of channels in the input
 max_epoch_num = 200
-num_of_train = 8 #number of epochs and validation for them
+num_of_train = 8 #number of epochs and validation for them, relevant when flag is false
 
 model = dict(
     type='ImageClassifier',

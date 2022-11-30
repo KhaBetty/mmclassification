@@ -169,6 +169,11 @@ class BaseClassifier(BaseModule, metaclass=ABCMeta):
         """
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
+        import collections
+        log_vars_val=collections.OrderedDict();
+        for k, v in log_vars.items():
+            new_key = 'val_' + k
+            log_vars_val[new_key] = v
 
         outputs = dict(
             loss=loss, log_vars=log_vars, num_samples=len(data['img'].data))
