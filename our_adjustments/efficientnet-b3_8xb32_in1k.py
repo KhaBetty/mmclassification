@@ -152,10 +152,10 @@ log_config = dict(
     ])
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.01)#, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
-lr_config = dict(policy='step', step=[])#step=[30, 60])#, 90])
+lr_config = dict(policy='step', step=[int(max_epoch_num/3),int(2*max_epoch_num/3)] if multi_image_flag else [int(multi_num*max_epoch_num/3),int(multi_num*2*max_epoch_num/3)])#step=[30, 60])#, 90])
 runner = dict(type='EpochBasedRunner', max_epochs= max_epoch_num if multi_image_flag else multi_num*max_epoch_num)#100)
 
 workflow = [('train', 1),('val',1)] if multi_image_flag else [('train', num_of_train),('val',1)]
