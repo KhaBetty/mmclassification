@@ -8,6 +8,10 @@ _base_ = [
 #TODO resized gray images
 work_dir = '/home/maya/projA/code_tests/try_with_tensorboard' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
 dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_8' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
+multi_image_flag = True
+multi_num= 8 #number of channels in the input
+max_epoch_num = 200
+num_of_train = 8 #number of epochs and validation for them
 
 model = dict(
     type='ImageClassifier',
@@ -78,11 +82,11 @@ classes = ['cats', 'dogs']  # The category names of your dataset
 
 #Grey
 img_norm_cfg = dict(
-    mean=[114.495,114.495,114.495,114.495,114.495,114.495,114.495,114.495],
-    std=[57.6,57.6,57.6,57.6,57.6,57.6,57.6,57.6], to_rgb=False)
+    mean=[114.495]* multi_num,
+    std=[57.6]*multi_num, to_rgb=False)
 
 train_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),#'LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),   #
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
@@ -91,7 +95,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),#'LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),   #'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='Resize', size=(256, -1)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -151,7 +155,7 @@ log_config = dict(
 optimizer = dict(type='SGD', lr=0.01)#, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
-lr_config = dict(policy='step', step=[30, 60])#, 90])
-runner = dict(type='EpochBasedRunner', max_epochs= 62)#100)
+lr_config = dict(policy='step', step=[])#step=[30, 60])#, 90])
+runner = dict(type='EpochBasedRunner', max_epochs= max_epoch_num if multi_image_flag else multi_num*max_epoch_num)#100)
 
-workflow = [('train', 1)]
+workflow = [('train', 1),('val',1)] if multi_image_flag else [('train', num_of_train),('val',1)]
