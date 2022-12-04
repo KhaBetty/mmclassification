@@ -6,12 +6,12 @@ _base_ = [
     '../configs/_base_/default_runtime.py',
 ]
 #TODO resized gray images
-work_dir = '/home/maya/projA/code_tests/try_with_tensorboard' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_8' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
+work_dir = '/home/maya/projA/runs/subpixel_32_4_with_checkpoint' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_4' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
 multi_image_flag = True
-multi_num= 8 #number of channels in the input
-max_epoch_num = 200
-num_of_train = 8 #number of epochs and validation for them, relevant when flag is false
+multi_num= 4 #number of channels in the input
+max_epoch_num = 270
+num_of_train = 2 #number of epochs and validation for them, relevant when flag is false
 
 model = dict(
     type='ImageClassifier',
@@ -156,6 +156,8 @@ optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(policy='step', step=[int(max_epoch_num/3),int(2*max_epoch_num/3)] if multi_image_flag else [int(multi_num*max_epoch_num/3),int(multi_num*2*max_epoch_num/3)])#step=[30, 60])#, 90])
-runner = dict(type='EpochBasedRunner', max_epochs= max_epoch_num if multi_image_flag else multi_num*max_epoch_num)#100)
+runner = dict(type='EpochBasedRunner', max_epochs= max_epoch_num * (8/multi_num))#100)
 
 workflow = [('train', 1),('val',1)] if multi_image_flag else [('train', num_of_train),('val',1)]
+
+checkpoint_config=dict(interval=1)
