@@ -12,6 +12,7 @@ multi_image_flag = False
 multi_num= 1 #number of channels in the input
 max_epoch_num = 100
 num_of_train = 1# 8/multi_num #number of epochs and validation for them, relevant when flag is false
+shuffle_flag = False
 
 model = dict(
     type='ImageClassifier',
@@ -86,7 +87,7 @@ img_norm_cfg = dict(
     std=[57.6]*multi_num, to_rgb=False)
 
 train_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, shuffle_flag=shuffle_flag),# if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
@@ -95,7 +96,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),# if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='Resize', size=(256, -1)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
