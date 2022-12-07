@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
+import random
 
 import mmcv
 import numpy as np
@@ -92,11 +93,13 @@ class LoadMultiChannelImages(object):
     def __init__(self,
                  to_float32=False,
                  color_type='color',
-                 file_client_args=dict(backend='disk')):
+                 file_client_args=dict(backend='disk'),
+                 shuffle_flag = False):
         self.to_float32 = to_float32
         self.color_type = color_type
         self.file_client_args = file_client_args.copy()
         self.file_client = None
+        self.shuffle_flag = shuffle_flag
 
     def __call__(self, results):
         if self.file_client is None:
@@ -116,6 +119,8 @@ class LoadMultiChannelImages(object):
         img = mmcv.imfrombytes(img_bytes, flag=self.color_type)
         shape=(img.shape[0], img.shape[1],len(images_path)) #TODO check where is the channels
         multi_img = np.zeros(shape,dtype=np.uint8)
+        if self.shuffle_flag:
+            random.shuffle(images_path)
         for channel_num,image_path in enumerate(images_path):
             img_bytes = self.file_client.get(image_path)
             img = mmcv.imfrombytes(img_bytes, flag=self.color_type)

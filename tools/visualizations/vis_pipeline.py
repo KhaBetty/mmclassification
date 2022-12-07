@@ -149,7 +149,7 @@ def build_dataset_pipelines(cfg, phase):
     data_cfg = cfg.data[phase]
     loadimage_pipeline = []
     if len(data_cfg.pipeline
-           ) != 0 and data_cfg.pipeline[0]['type'] == 'LoadImageFromFile':
+           ) != 0 and (data_cfg.pipeline[0]['type'] == 'LoadImageFromFile' or data_cfg.pipeline[0]['type'] == 'LoadMultiChannelImages'):
         loadimage_pipeline.append(data_cfg.pipeline.pop(0))
     origin_pipeline = data_cfg.pipeline
     data_cfg.pipeline = loadimage_pipeline
@@ -262,7 +262,7 @@ def adaptive_size(image, min_edge_length, max_edge_length, src_shape=None):
     return image
 
 
-def get_display_img(args, item, pipelines):
+def get_display_img(args, item, pipelines, i_channel):
     """get image to display."""
     # srcs picture could be in RGB or BGR order due to different backends.
     if args.bgr2rgb:
@@ -308,7 +308,8 @@ def main():
 
     with vis.ImshowInfosContextManager(fig_size=(wind_w, wind_h)) as manager:
         for i, item in enumerate(itertools.islice(dataset, display_number)):
-            image = get_display_img(args, item, pipelines)
+            for i in range(item['img'].shape[2]):
+                image = get_display_img(args, item, pipelines, i)
 
             # dist_path is None as default, means not saving pictures
             dist_path = None
