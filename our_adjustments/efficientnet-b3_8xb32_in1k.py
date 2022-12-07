@@ -6,11 +6,11 @@ _base_ = [
     '../configs/_base_/default_runtime.py',
 ]
 #TODO resized gray images
-work_dir = '/home/maya/projA/runs/resized_64_100_epochs' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+work_dir = '/home/maya/projA/runs/resized_64_150_epochs' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
 dataset_prefix = '/home/maya/Pictures/projA_pics/resized_64' #'/home/maya/Pictures/projA_pics/dataset_balanced'#TODO
 multi_image_flag = False
 multi_num= 1 #number of channels in the input
-max_epoch_num = 100
+max_epoch_num = 150
 num_of_train = 1# 8/multi_num #number of epochs and validation for them, relevant when flag is false
 shuffle_flag = False
 
@@ -87,7 +87,7 @@ img_norm_cfg = dict(
     std=[57.6]*multi_num, to_rgb=False)
 
 train_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, shuffle_flag=shuffle_flag),# if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE,shuffle_flag=shuffle_flag) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
@@ -96,7 +96,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE),# if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='Resize', size=(256, -1)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -160,8 +160,8 @@ optimizer_config = dict(grad_clip=None)
 #lr_config = dict(policy='step', step=[int(max_epoch_num/3),int(2*max_epoch_num/3)] if multi_image_flag else [int(multi_num*max_epoch_num/3),int(multi_num*2*max_epoch_num/3)])#step=[30, 60])#, 90])
 lr_config = dict(policy='step', step=[10000])#[int(max_epoch_num/3),int(2*max_epoch_num/3)] )#TODO temporary should be fixed for now
 
-runner = dict(type='EpochBasedRunner', max_epochs= max_epoch_num)# /multi_num)#divide by number of channels because of the way we go through all pics)
+runner = dict(type='EpochBasedRunner', max_epochs= int(max_epoch_num/multi_num))#divide by number of channels because of the way we go through all pics)
 #TODO change max
 workflow = [('train', int(num_of_train)),('val',1)]
 
-checkpoint_config=dict(interval=1)
+checkpoint_config=dict(interval=30)
