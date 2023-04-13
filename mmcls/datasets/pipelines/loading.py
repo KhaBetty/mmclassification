@@ -93,6 +93,7 @@ class LoadMultiChannelImages(object):
     def __init__(self,
                  to_float32=False,
                  color_type='color',
+                 num_of_channels = None,
                  file_client_args=dict(backend='disk'),
                  shuffle_flag=False):
         self.to_float32 = to_float32
@@ -100,6 +101,7 @@ class LoadMultiChannelImages(object):
         self.file_client_args = file_client_args.copy()
         self.file_client = None
         self.shuffle_flag = shuffle_flag
+        self.num_of_channels = num_of_channels
 
     def __call__(self, results):
         if self.file_client is None:
@@ -117,6 +119,8 @@ class LoadMultiChannelImages(object):
         #check size
         img_bytes = self.file_client.get(images_path[0])
         img = mmcv.imfrombytes(img_bytes, flag=self.color_type)
+        if self.num_of_channels:
+            images_path = images_path[:self.num_of_channels]
         shape=(img.shape[0], img.shape[1],len(images_path)) #TODO check where is the channels
         multi_img = np.zeros(shape,dtype=np.uint8)
         if self.shuffle_flag:

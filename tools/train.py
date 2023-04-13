@@ -22,6 +22,8 @@ from mmcls.utils import (auto_select_device, collect_env, get_root_logger,
                          setup_multi_processes)
 
 
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a model')
     parser.add_argument('config', help='train config file path')
@@ -89,7 +91,7 @@ def parse_args():
     return args
 
 
-def main(our_adjustments, image_num):
+def main(our_adjustments, image_num, freeze_flag, train_layers):
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
@@ -185,6 +187,14 @@ def main(our_adjustments, image_num):
         new_layer.weight = torch.nn.parameter.Parameter(tmp_weights)
         model.backbone.layers[0].conv = new_layer
 
+    if freeze_flag:
+        counter = 1
+        for child in model.children():
+            for param in child.parameters():
+                if train_layers < counter:
+                    param.requires_grad = False
+                counter = counter+1
+
     #init w&b
     #wandb.init(project="regular-training")
 
@@ -214,7 +224,9 @@ def main(our_adjustments, image_num):
         meta=meta)
 
 
+
 if __name__ == '__main__':
-    our_adjustments =True
-    image_num = 1
-    main(our_adjustments,image_num)
+    our_adjustments =True #replace the first layer with random values
+    image_num = 4
+    main(our_adjustments,image_num,False,2)
+
