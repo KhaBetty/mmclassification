@@ -6,12 +6,14 @@ _base_ = [
     '../configs/_base_/default_runtime.py',
 ]
 #TODO resized gray images
-work_dir = '/home/maya/projA/runs/subpixel_32_4_depth_4_dir_2' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_4_depth_4_dir_2' #'/phome/maya/Pictures/projA_pics/dataset_balanced'#TODO
+work_dir = '/home/maya/projA/runs/subpixel_32_4_depth_2_dir_2_metadata' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_4_depth_2_dir_2_metadata' #'/phome/maya/Pictures/projA_pics/dataset_balanced'#TODO
 multi_image_flag = True
 multi_num= 4 #number of channels in the input
 max_epoch_num = 150 #150 #150
 shuffle_flag = False
+metadata_name = 'direction_matrix.npy'
+metadata_flag = True
 #load_from = '/home/maya/projA/runs/resized_32_rgb/epoch_50.pth'
 model = dict(
     type='ImageClassifier',
@@ -29,7 +31,7 @@ model = dict(
         topk=(1, 5),
     ))
 
-dataset_type = 'CustomDataset'
+dataset_type = 'AdjustedCustomDataset'
 
 classes = ['cats', 'dogs']  # The category names of your dataset
 
@@ -82,11 +84,14 @@ classes = ['cats', 'dogs']  # The category names of your dataset
 
 #Grey
 img_norm_cfg = dict(
-    mean=[114.495]* multi_num,
-    std=[57.6]*multi_num, to_rgb=False)
+    mean=[114.495]* multi_num + [114.495]*metadata_flag,
+    std=[57.6]*multi_num + [57.6]*metadata_flag, to_rgb=False)
 
 train_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE,shuffle_flag=shuffle_flag) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type='LoadMetadataMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, metadata=metadata_flag) if multi_image_flag else dict(type='LoadImageFromFile',
+                                                                  color_type=cv2.IMREAD_GRAYSCALE),
+
+   # dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE,shuffle_flag=shuffle_flag) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
@@ -95,7 +100,10 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type='LoadMetadataMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, metadata=metadata_flag) if multi_image_flag else dict(
+        type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
+
+    #dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
     dict(type='Resize', size=(256, -1)),
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
@@ -109,21 +117,24 @@ data = dict(
         data_prefix= dataset_prefix + '/training_set',
         ann_file = None,
         classes=classes,
-        pipeline = train_pipeline
+        pipeline = train_pipeline,
+        matadata_file_name = metadata_name
     ),
     val=dict(
         type=dataset_type,
         data_prefix= dataset_prefix +'/validation_set',
         ann_file = None,
         classes=classes,
-        pipeline = test_pipeline
+        pipeline = test_pipeline,
+        matadata_file_name = metadata_name
     ),
     test=dict(
         type=dataset_type,
         data_prefix= dataset_prefix+ '/test_set',
         ann_file = None,
         classes=classes,
-        pipeline = test_pipeline
+        pipeline = test_pipeline,
+        matadata_file_name = metadata_name
     )
 )
 evaluation = dict(interval=1, metric='accuracy', metric_options= {'topk': (1, )})

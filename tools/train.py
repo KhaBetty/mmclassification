@@ -91,7 +91,7 @@ def parse_args():
     return args
 
 
-def main(our_adjustments, image_num, freeze_flag, train_layers):
+def main(our_adjustments, image_num, metadata_flag, freeze_flag, train_layers):
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
@@ -181,6 +181,8 @@ def main(our_adjustments, image_num, freeze_flag, train_layers):
     model.init_weights()
 
     if our_adjustments:
+        if metadata_flag:
+            image_num =image_num + 1
         tmp_weights = torch.FloatTensor(40,image_num,3,3).uniform_(-1/np.sqrt(3*3*image_num*40),1/np.sqrt(3*3*image_num*40))
             #torch.randn((40,image_num,3,3),requires_grad=True)
         new_layer = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
@@ -228,5 +230,6 @@ def main(our_adjustments, image_num, freeze_flag, train_layers):
 if __name__ == '__main__':
     our_adjustments =True #replace the first layer with random values
     image_num = 4
-    main(our_adjustments,image_num,False,2)
+    metadata_flag = True
+    main(our_adjustments,image_num,metadata_flag,False,2)
 

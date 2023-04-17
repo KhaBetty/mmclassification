@@ -47,24 +47,52 @@ def load_images(paths_list, color=None):
         list_of_images.append(image)
     return list_of_images
 
+def generate_dict():
+    d = {}
+    counter=-1
+    for i in range(4):
+        for j in range(i, 4):
+
+            if i == j:
+                key = str(i) * 2
+            else:
+                key = str(i) + str(j)
+            if sum(int(k) for k in key) != 3:
+                counter=counter+1
+                start_index=counter*4
+                value = [0] * 32
+                for k in range(start_index, start_index + 4):
+                    value[k] = 1
+                d[key] = value
+    return d
 
 def sub_pixel_creator(image, path, num_of_images, image_num, size,depth):
     path_images = path + str(image_num)
     os.mkdir(path_images)  # take of the image extension
     directions_list = ['left', 'up', 'down', 'right']
-
+    d=generate_dict()
+    mat=[]
     for i in range(1, num_of_images + 1):
         edited_image = image
         directions = []
         dir1=random.randrange(0, 4)
         dir2 = random.randrange(0, 4)
+        #swap because the dictionary's keys always start with the smaller digit
 
         # make sure that the directions do not cancel each other
         while dir1 == 3-dir2:
             dir1 = random.randrange(0, 4)
             dir2 = random.randrange(0, 4)
+        if dir1 > dir2:
+            temp = dir1
+            dir1 = dir2
+            dir2 = temp
         directions.append(directions_list[dir1])
         directions.append(directions_list[dir2])
+        #
+        key=str(dir1)+str(dir2)
+        mat.append(np.array(d[key]))
+
         print(directions)
         for j in range(2):  # move randomly 2 times
             direction = directions[j]
@@ -72,6 +100,11 @@ def sub_pixel_creator(image, path, num_of_images, image_num, size,depth):
                                       dtype='uint8')  # gray scale image , two dim
         edited_image = cv2.resize(edited_image, (size, size), interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
+    matrix=np.stack(mat, axis=0)
+    #get the path of the directory
+    # directory_path, a= os.path.split(path)
+    # directory_path, a=os.path.split(directory_path)
+    np.save(path_images+'/direction_matrix.npy', matrix)
 
 def resized_creator(image, path, image_num, size):
     edited_image = image
@@ -128,10 +161,10 @@ if __name__ == '__main__':
             images = load_images(path_list)
             orig_grey_path = (main_path + "orig_grey" + '/' + data_set +'/' + animal + 's/' + animal)
             resized_path = (main_path + "resized_32_rgb" + '/' + data_set +'/' + animal + 's/' + animal)
-            subpixel_path = (main_path + "subpixel_32_4_depth_4_dir_2" + '/' + data_set + '/' + animal + 's/' + animal)
+            subpixel_path = (main_path + "subpixel_32_4_depth_2_dir_2_metadata" + '/' + data_set + '/' + animal + 's/' + animal)
             subpixel_fixed_path = (main_path + "subpixel_32_4_fixed_depth_1" + '/' + data_set + '/' + animal + 's/' + animal)
             for counter, image in enumerate(images):
-                sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1,32,4)
+                sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1,32,2)
               # sub_pixel_fixed_movements_creator(image, subpixel_fixed_path,counter,32,1)
                #resized_creator(image, resized_path, counter + 1, 32)
                # original_grey_creator(image, orig_grey_path, counter + 1)
