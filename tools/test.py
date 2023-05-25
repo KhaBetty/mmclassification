@@ -18,6 +18,75 @@ from mmcls.models import build_classifier
 from mmcls.utils import (auto_select_device, get_root_logger,
                          setup_multi_processes, wrap_distributed_model,
                          wrap_non_distributed_model)
+import torch.nn as nn
+import mmcls.models.backbones.efficientnet as efficientnet_orig
+MEAN = True
+
+def forward(self, x): #cont forward and combination
+    # Part A
+    part_a_output = []
+    #part_a_output_1 = self.layers_partA[0](x)
+    num_channels = x.shape[1]
+    num_layers_per_channel = int(len(self.layers_partA)/num_channels)
+    for index in range(num_channels):
+        input = x[:,index,:,:]
+        input = input.unsqueeze(dim=1)
+        for i in range(num_layers_per_channel):
+            input = self.layers_partA[i+num_layers_per_channel*index](input)
+
+        part_a_output.append(input)
+
+
+    # Combine Part A outputs with pointwise convolution
+    combined_output = torch.stack(part_a_output, dim=0)
+    #print(combined_output.shape)
+    if MEAN:
+        combined_output = torch.mean(combined_output, dim=0) #TODO change to different logic
+    else:
+        combined_output, _ = torch.max(combined_output, dim=0)  # TODO change to different logic
+
+
+    # Part B
+    outs = []
+    for i, layer in enumerate(self.layers_partB):
+        combined_output = layer(combined_output)
+        if i+num_layers_per_channel in self.out_indices:
+            outs.append(combined_output)
+    #part_b_output = self.layers_partB(combined_output)
+
+    # Return final output
+    #print('outs', outs) #TODO
+    return tuple(outs) #part_b_output
+
+
+
+
+    # outs = []
+    # for i, layer in enumerate(self.layers):
+    #     x = layer(x)
+    #     if i in self.out_indices:
+    #         outs.append(x)
+    #
+    # return tuple(outs)
+
+def adjust_model(self, seperate_block, num_channels=1): #change the model structure and forward
+    image_num=1
+    #tmp_weights = torch.FloatTensor(40,image_num,3,3).uniform_(-1/np.sqrt(3*3*image_num*40),1/np.sqrt(3*3*image_num*40))
+    #torch.randn((40,image_num,3,3),requires_grad=True)
+    new_layer = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
+   # new_layer.weight = torch.nn.parameter.Parameter(tmp_weights)
+    self.layers[0].conv = new_layer
+    partA = self.layers[:seperate_block]
+
+    self.layers_partB = self.layers[seperate_block:]
+    #change forward of model
+    # self.forward = forward
+    #duplicate the first part
+    self.layers_partA = nn.ModuleList()
+    for i in range(num_channels):
+        self.layers_partA = self.layers_partA + partA #nn.ModuleList(list(partA)).to('cuda:0')
+
+
 
 
 def parse_args():
@@ -105,7 +174,7 @@ def parse_args():
     return args
 
 
-def main(our_adjustments, image_num):
+def main(our_adjustments, image_num, divided_model=False, seperate_block=6):
     args = parse_args()
 
     cfg = mmcv.Config.fromfile(args.config)
@@ -167,7 +236,12 @@ def main(our_adjustments, image_num):
     # build the model and load checkpoint
     model = build_classifier(cfg.model)
     if our_adjustments:
-        model.backbone.layers[0].conv = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
+        if divided_model:
+            efficientnet_orig.EfficientNet.adjust_model = adjust_model
+            efficientnet_orig.EfficientNet.forward = forward
+            model.backbone.adjust_model(num_channels=4, seperate_block = seperate_block)
+        else:
+            model.backbone.layers[0].conv = conv_layer(image_num,40,kernel_size=(3,3), stride= (2,2),bias=False)
 
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
@@ -249,5 +323,5 @@ def main(our_adjustments, image_num):
 
 if __name__ == '__main__':
     our_adjustments = True
-    image_num = 1
-    main(our_adjustments, image_num)
+    image_num = 4
+    main(our_adjustments, image_num, divided_model=True, seperate_block=6)

@@ -221,7 +221,7 @@ class LoadMetadataMultiChannelImages(object):
             dirs = np.load(dirs_path[0])
             #dirs = torch.from_numpy(dirs_np)
             dirs = dirs.reshape(dirs.shape[0],dirs.shape[1],-1) # dirs.unsqueeze(2)
-            dirs = np.concatenate([dirs]*(32//dirs.shape[0]), axis=0)
+            dirs = np.concatenate([dirs]*int(32//dirs.shape[0]), axis=0)
 
             multi_img =np.concatenate([multi_img,dirs], axis=2)
 

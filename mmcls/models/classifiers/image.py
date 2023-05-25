@@ -110,16 +110,19 @@ class ImageClassifier(BaseClassifier):
 
         x = self.backbone(img)
 
+
         if stage == 'backbone':
             return x
 
         if self.with_neck:
             x = self.neck(x)
+
         if stage == 'neck':
             return x
 
         if self.with_head and hasattr(self.head, 'pre_logits'):
             x = self.head.pre_logits(x)
+
         return x
 
     def forward_train(self, img, gt_label, **kwargs):
@@ -137,6 +140,7 @@ class ImageClassifier(BaseClassifier):
         """
         if self.augments is not None:
             img, gt_label = self.augments(img, gt_label)
+
 
         x = self.extract_feat(img)
 

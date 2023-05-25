@@ -377,17 +377,17 @@ class AdjustedCustomDataset(BaseDataset):
         for filename in samples:
             #, gt_label
             info = {'img_prefix': self.data_prefix}
-            if os.path.basename(filename[0]) == self.matadata_file_name:
-            #metadata file so addapting it to the other images
-                #dirs_np = np.load(self.data_prefix +'/' + filename[0])
-                #dirs = torch.from_numpy(dirs_np)
-                info['img_info'] = {'filename': filename[0]}
-                info['gt_label'] = np.array(-1, dtype=np.int64)
-            else:
-                gt_label = filename[1]
-                filename = filename[0]
-                info['img_info'] = {'filename': filename}
-                info['gt_label'] = np.array(gt_label, dtype=np.int64)
+            # if os.path.basename(filename[0]) == self.matadata_file_name:
+            # #metadata file so addapting it to the other images
+            #     #dirs_np = np.load(self.data_prefix +'/' + filename[0])
+            #     #dirs = torch.from_numpy(dirs_np)
+            #     info['img_info'] = {'filename': filename[0]}
+            #     info['gt_label'] = np.array(-1, dtype=np.int64)
+            # else:
+            gt_label = filename[1]
+            filename = filename[0]
+            info['img_info'] = {'filename': filename}
+            info['gt_label'] = np.array(gt_label, dtype=np.int64)
 
 
 

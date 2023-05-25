@@ -1,17 +1,19 @@
 import cv2
 _base_ = [
-    '../configs/_base_/models/efficientnet_b3.py', #'_adjust.py',
+    '../configs/_base_/models/efficientnet_b3.py',
     '../configs/_base_/datasets/imagenet_bs32.py',
     '../configs/_base_/schedules/imagenet_bs256.py',
     '../configs/_base_/default_runtime.py',
 ]
 #TODO resized gray images
-work_dir = '/home/maya/projA/runs/resized_64' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/resized_64' #'/phome/maya/Pictures/projA_pics/dataset_balanced'#TODO
-multi_image_flag = False
-multi_num= 1 #number of channels in the input
-max_epoch_num = 400 #150 #150
+work_dir = '/home/maya/projA/runs/subpixel_32_4_depth_2_dir_2_metadata' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/maya/Pictures/projA_pics/subpixel_32_4_depth_2_dir_2_metadata' #'/phome/maya/Pictures/projA_pics/dataset_balanced'#TODO
+multi_image_flag = True
+multi_num= 4 #number of channels in the input
+max_epoch_num = 150 #150 #150
 shuffle_flag = False
+metadata_name = 'direction_matrix.npy'
+metadata_flag = True
 #load_from = '/home/maya/projA/runs/resized_32_rgb/epoch_50.pth'
 model = dict(
     type='ImageClassifier',
@@ -29,7 +31,7 @@ model = dict(
         topk=(1, 5),
     ))
 
-dataset_type = 'CustomDataset'
+dataset_type = 'AdjustedCustomDataset'
 
 classes = ['cats', 'dogs']  # The category names of your dataset
 
@@ -82,16 +84,15 @@ classes = ['cats', 'dogs']  # The category names of your dataset
 
 #Grey
 img_norm_cfg = dict(
-    mean=[114.495]* multi_num ,
-    std=[57.6]*multi_num , to_rgb=False)
+    mean=[114.495]* multi_num + [114.495]*metadata_flag,
+    std=[57.6]*multi_num + [57.6]*metadata_flag, to_rgb=False)
 
 train_pipeline = [
-   # dict(type='LoadMetadataMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, metadata=metadata_flag) if multi_image_flag else dict(type='LoadImageFromFile',
-   #                                                               color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type='LoadMetadataMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, metadata=metadata_flag) if multi_image_flag else dict(type='LoadImageFromFile',
+                                                                  color_type=cv2.IMREAD_GRAYSCALE),
 
-   dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE,shuffle_flag=shuffle_flag) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
-   # dict(type='RandomResizedCrop', size=224), #TODO DELEE AFTER ORIG
-    dict(type='MultiRandomErasing'),
+   # dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE,shuffle_flag=shuffle_flag) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type='RandomResizedCrop', size=224),
     dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
@@ -99,12 +100,12 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_label'])
 ]
 test_pipeline = [
-   # dict(type='LoadMetadataMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, metadata=metadata_flag) if multi_image_flag else dict(
-   #     type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
-#TODO added shuffle in test
-    dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE,shuffle_flag=shuffle_flag) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
-    #dict(type='Resize', size=(224, -1)), #TODO deleter after orig
-    #dict(type='CenterCrop', crop_size=224),  #TODO DELEE AFTER ORIG
+    dict(type='LoadMetadataMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE, metadata=metadata_flag) if multi_image_flag else dict(
+        type='LoadImageFromFile', color_type=cv2.IMREAD_GRAYSCALE),
+
+    #dict(type= 'LoadMultiChannelImages', color_type=cv2.IMREAD_GRAYSCALE) if multi_image_flag else dict(type='LoadImageFromFile',color_type=cv2.IMREAD_GRAYSCALE),
+    dict(type='Resize', size=(256, -1)),
+    dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ImageToTensor', keys=['img']),
     dict(type='Collect', keys=['img'])
@@ -116,21 +117,24 @@ data = dict(
         data_prefix= dataset_prefix + '/training_set',
         ann_file = None,
         classes=classes,
-        pipeline = train_pipeline
+        pipeline = train_pipeline,
+        matadata_file_name = metadata_name
     ),
     val=dict(
         type=dataset_type,
         data_prefix= dataset_prefix +'/validation_set',
         ann_file = None,
         classes=classes,
-        pipeline = test_pipeline
+        pipeline = test_pipeline,
+        matadata_file_name = metadata_name
     ),
     test=dict(
         type=dataset_type,
         data_prefix= dataset_prefix+ '/test_set',
         ann_file = None,
         classes=classes,
-        pipeline = test_pipeline
+        pipeline = test_pipeline,
+        matadata_file_name = metadata_name
     )
 )
 evaluation = dict(interval=1, metric='accuracy', metric_options= {'topk': (1, )})
@@ -159,14 +163,14 @@ log_config = dict(
     ])
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001) #TODO temporary instead of 0.01
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001) #TODO temporary instead of 0.01
 
 optimizer_config = dict(grad_clip=None)
 # learning policy
 #lr_config = dict(policy='step', step=[int(max_epoch_num/3),int(2*max_epoch_num/3)] if multi_image_flag else [int(multi_num*max_epoch_num/3),int(multi_num*2*max_epoch_num/3)])#step=[30, 60])#, 90])
 lr_config = dict(policy='step', step=[10000])#[int(max_epoch_num/3),int(2*max_epoch_num/3)] )#TODO temporary should be fixed for now
 
-runner = dict(type='EpochBasedRunner', max_epochs= int(max_epoch_num/multi_num))#divide by number of channels because of the way we go through all pics)
+runner = dict(type='EpochBasedRunner', max_epochs= int(max_epoch_num/(multi_num+metadata_flag)))#divide by number of channels because of the way we go through all pics)
 #TODO change max
 workflow = [('train', 1),('val',1)]
 

@@ -321,6 +321,7 @@ class EfficientNet(BaseBackbone):
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg))
+       # self.combine_layer = nn.Conv2d(in_channels=1, out_channels=)
 
     def make_layer(self):
         # Without the first and the final conv block.

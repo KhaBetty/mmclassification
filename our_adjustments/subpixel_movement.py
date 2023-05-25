@@ -5,6 +5,7 @@ import os
 import random
 
 
+'''
 def pad_vector(vector, how, depth, constant_value=0):
     vect_shape = vector.shape[:2]
     if how == 'up':
@@ -22,6 +23,17 @@ def pad_vector(vector, how, depth, constant_value=0):
     else:
         return vector
     return pv
+'''
+def mover (image, how, depth, constant_value=0):
+    if how == 'up':
+        image[:depth,:]=constant_value
+    if how == 'down':
+        image[-1*depth:,:]=constant_value
+    if how == 'left':
+        image[:,:depth]=constant_value
+    if how == 'right':
+        image[:,-1*depth:]=constant_value
+    return image
 
 def image_compare(image1, image2):
     print(np.max((image1 - image2)))
@@ -66,7 +78,7 @@ def generate_dict():
                 d[key] = value
     return d
 
-def sub_pixel_creator(image, path, num_of_images, image_num, size,depth):
+def sub_pixel_creator(image, path, num_of_images, image_num, size,depth, csv=None):
     path_images = path + str(image_num)
     os.mkdir(path_images)  # take of the image extension
     directions_list = ['left', 'up', 'down', 'right']
@@ -77,16 +89,11 @@ def sub_pixel_creator(image, path, num_of_images, image_num, size,depth):
         directions = []
         dir1=random.randrange(0, 4)
         dir2 = random.randrange(0, 4)
-        #swap because the dictionary's keys always start with the smaller digit
 
         # make sure that the directions do not cancel each other
         while dir1 == 3-dir2:
             dir1 = random.randrange(0, 4)
             dir2 = random.randrange(0, 4)
-        if dir1 > dir2:
-            temp = dir1
-            dir1 = dir2
-            dir2 = temp
         directions.append(directions_list[dir1])
         directions.append(directions_list[dir2])
         #
@@ -96,15 +103,15 @@ def sub_pixel_creator(image, path, num_of_images, image_num, size,depth):
         print(directions)
         for j in range(2):  # move randomly 2 times
             direction = directions[j]
-            edited_image = np.asarray(pad_vector(vector=np.asmatrix(edited_image[:, :]), how=direction, depth=depth),
-                                      dtype='uint8')  # gray scale image , two dim
+            edited_image = np.asarray(mover(edited_image, how=direction, depth=depth),dtype='uint8')  # gray scale image , two dim
         edited_image = cv2.resize(edited_image, (size, size), interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
     matrix=np.stack(mat, axis=0)
     #get the path of the directory
-    # directory_path, a= os.path.split(path)
-    # directory_path, a=os.path.split(directory_path)
-    np.save(path_images+'/direction_matrix.npy', matrix)
+    directory_path, a= os.path.split(path)
+    directory_path, a=os.path.split(directory_path)
+    if csv:
+        np.save(directory_path + '/direction_matrix.npy', matrix)
 
 def resized_creator(image, path, image_num, size):
     edited_image = image
@@ -119,27 +126,28 @@ def original_grey_creator(image, path, image_num):
 #this function creates 4 subpixel images where the first is moved right, the second left, third up, fourth down
 def sub_pixel_fixed_movements_creator(image, path, image_num, size,depth,eight_channels=None):
     path_images = path + str(image_num)
+    standard_size = 300;
     directions = ['right', 'left', 'up', 'down']
     os.mkdir(path_images)  # take of the image extension
     for i in range(1, 5):
         edited_image = image
         direction = directions[i-1]
-        edited_image = np.asarray(pad_vector(vector=np.asmatrix(edited_image[:, :]), how=direction, depth=depth),
-                                      dtype='uint8')  # gray scale image , two dim
+        #resize all images to the same size so we can know how much we moved in sub-pixels
+        edited_image = cv2.resize(edited_image, (standard_size, standard_size), interpolation=cv2.INTER_LINEAR)
+        edited_image = np.asarray(mover(edited_image, how=direction, depth=depth),dtype='uint8')  # gray scale image , two dim
         edited_image = cv2.resize(edited_image, (size, size), interpolation=cv2.INTER_LINEAR)
         cv2.imwrite(path_images + '/' + str(i) + '.jpg', edited_image)
-    dir1=['right', 'left']
-    dir2=['up', 'down']
-    counter=5
+
 
     if eight_channels:
+        dir1 = ['right', 'left']
+        dir2 = ['up', 'down']
+        counter = 5
         for rl in dir1:
             for ud in dir2:
                 edited_image = image
-                edited_image = np.asarray(pad_vector(vector=np.asmatrix(edited_image[:, :]), how=rl, depth=depth//2),
-                                          dtype='uint8')  # gray scale image , two dim
-                edited_image = np.asarray(pad_vector(vector=np.asmatrix(edited_image[:, :]), how=ud, depth=depth//2),
-                                          dtype='uint8')  # gray scale image , two dim
+                edited_image = np.asarray(mover(edited_image, how=rl, depth=depth//2),dtype='uint8')  # gray scale image , two dim
+                edited_image = np.asarray(mover(edited_image, how=ud, depth=depth//2), dtype='uint8')  # gray scale image , two dim
                 edited_image = cv2.resize(edited_image, (size, size), interpolation=cv2.INTER_LINEAR)
                 cv2.imwrite(path_images + '/' + str(counter) + '.jpg', edited_image)
                 counter = counter + 1
@@ -160,13 +168,13 @@ if __name__ == '__main__':
             path_list = load_image_paths(main_path + "dataset_balanced" + '/' + data_set + '/' + animal + 's')
             images = load_images(path_list)
             orig_grey_path = (main_path + "orig_grey" + '/' + data_set +'/' + animal + 's/' + animal)
-            resized_path = (main_path + "resized_32_rgb" + '/' + data_set +'/' + animal + 's/' + animal)
-            subpixel_path = (main_path + "subpixel_32_4_depth_2_dir_2_metadata" + '/' + data_set + '/' + animal + 's/' + animal)
-            subpixel_fixed_path = (main_path + "subpixel_32_4_fixed_depth_1" + '/' + data_set + '/' + animal + 's/' + animal)
+            resized_path = (main_path + "resized_64" + '/' + data_set +'/' + animal + 's/' + animal)
+            subpixel_path = (main_path + "subpixel_32_4_depth_4_dir_2" + '/' + data_set + '/' + animal + 's/' + animal)
+            subpixel_fixed_path = (main_path + "subpixel_64_4_fixed_depth_3" + '/' + data_set + '/' + animal + 's/' + animal)
             for counter, image in enumerate(images):
-                sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1,32,2)
-              # sub_pixel_fixed_movements_creator(image, subpixel_fixed_path,counter,32,1)
-               #resized_creator(image, resized_path, counter + 1, 32)
+               # sub_pixel_creator(image, subpixel_path, num_subpixel_images, counter + 1,32,4)
+               sub_pixel_fixed_movements_creator(image, subpixel_fixed_path,counter,64,3)
+               #resized_creator(image, resized_path, counter + 1, 64)
                # original_grey_creator(image, orig_grey_path, counter + 1)
     # resize_images_and_save(images,orig_grey_path,resized_path,subpixel_path)
 
