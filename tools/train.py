@@ -26,7 +26,59 @@ import mmcls.models.backbones.efficientnet as efficientnet_orig
 import copy
 from mmcv.cnn import ConvModule
 #TODO change logic
-MEAN =  True
+MEAN =  False
+REPEAT_FLAG = False
+INPUT_SHAPE = 384*2*2
+
+class SelfAttention(nn.Module):
+    def __init__(self, input_dim):
+        super(SelfAttention, self).__init__()
+        self.input_dim = input_dim
+        self.query = nn.Linear(input_dim, input_dim)
+        self.key = nn.Linear(input_dim, input_dim)
+        self.value = nn.Linear(input_dim, input_dim)
+        self.softmax = nn.Softmax(dim=-1) #2
+
+    def forward(self, x):
+        # _,batch_size,_,_,_ = x.size()
+        #
+        # all_batch= []
+        # x_i = x[:, :, :, :, :]  # one image in batch
+        x_i_flat = x.flatten(start_dim=2)
+        x_i_flat = x_i_flat.permute(1, 0, 2)
+        #x_i_flat = x_i_flat.flatten(start_dim=1, end_dim=2)
+        #print('x_i_flat', x_i_flat.shape)
+        #x_i_flat = x_i_flat.permute(1,0,2)
+        #print('x_i_flat', x_i_flat.shape)
+        queries = self.query(x_i_flat)
+        keys = self.key(x_i_flat)
+        values = self.value(x_i_flat)
+        #print('queries', queries.shape)
+        #print('keys', keys.transpose(1, 2).shape)
+        scores = torch.bmm(queries, keys.transpose(1, 2)) / (self.input_dim ** 0.5)
+        #print('scores', scores.shape)
+        attention = self.softmax(scores)
+        weighted = torch.bmm(attention, values)
+        all_weighted = torch.reshape(weighted, x.shape)
+
+      #  all_weighted = torch.reshape(weighted, (x_i.shape[2], x_i.shape[3], x_i.shape[4]))
+        #all_batch.append(weighted)
+        # for i in range(batch_size):
+        #     x_i = x[:,i,:,:,:] #one image in batch
+        #     x_i_flat = x_i.flatten(start_dim=1)
+        #     print('x_i_flat', x_i_flat.shape)
+        #     queries = self.query(x_i_flat)
+        #     keys = self.key(x_i_flat)
+        #     values = self.value(x_i_flat)
+        #     scores = torch.bmm(queries, keys.transpose(1, 2)) / (self.input_dim ** 0.5)
+        #     attention = self.softmax(scores)
+        #     weighted = torch.bmm(attention, values)
+        #     weighted = torch.reshape(weighted, (x_i.shape[2], x_i.shape[3], x_i.shape[4]))
+        #     all_batch.append(weighted)
+
+       # all_weighted = torch.stack(all_batch, dim=0)
+
+        return all_weighted
 
 '''
 def forward(self, x):
@@ -45,22 +97,34 @@ def forward(self, x): #cont forward and combination
     #part_a_output_1 = self.layers_partA[0](x)
     num_channels = x.shape[1]
     num_layers_per_channel = int(len(self.layers_partA)/num_channels)
-    for index in range(num_channels):
-        input = x[:,index,:,:]
-        input = input.unsqueeze(dim=1)
-        for i in range(num_layers_per_channel):
-            input = self.layers_partA[i+num_layers_per_channel*index](input)
+    if REPEAT_FLAG:
+        num_layers =len(self.layers_partA)
+        for index in range(num_channels):
+            input = x[:, index, :, :]
+            input = input.unsqueeze(dim=1)
+            for i in range(num_layers):
+                input = self.layers_partA[i](input) #forward from with same filters = share weights
 
-        part_a_output.append(input)
+            part_a_output.append(input)
+    else:
+        for index in range(num_channels):
+            input = x[:,index,:,:]
+            input = input.unsqueeze(dim=1)
+            for i in range(num_layers_per_channel):
+                input = self.layers_partA[i+num_layers_per_channel*index](input)
+
+            part_a_output.append(input)
 
 
     # Combine Part A outputs with pointwise convolution
     combined_output = torch.stack(part_a_output, dim=0)
-    #print(combined_output.shape)
-    if MEAN:
-        combined_output = torch.mean(combined_output, dim=0) #TODO change to different logic
-    else:
-        combined_output, _ = torch.max(combined_output, dim=0)  # TODO change to different logic
+    #add attention before combining
+    combined_output = self.attention(combined_output)
+    combined_output = torch.sum(combined_output, dim=0)
+    # if MEAN:
+    #     combined_output = torch.mean(combined_output, dim=0) #TODO change to different logic
+    # else:
+    #     combined_output, _ = torch.max(combined_output, dim=0)  # TODO change to different logic
 
     # point conv
     # #reshpe tensors
@@ -71,12 +135,22 @@ def forward(self, x): #cont forward and combination
     # #print(combined_output.shape)
     # combined_output = torch.reshape(combined_output,(32,384,1,1))
 
+    # #reshpe tensors
+    # part_a_output = [torch.reshape(tensor_i,(32,1,384,1)) for tensor_i in part_a_output]
+   # combined_output = torch.cat(part_a_output, dim=1)
+    # #print(combined_output.shape)
+    #combined_output = self.attention(combined_output)
+    # #print(combined_output.shape)
+    #combined_output = torch.reshape(combined_output,(32,384,1,1))
+
 
     # Part B
     outs = []
     for i, layer in enumerate(self.layers_partB):
         combined_output = layer(combined_output)
-        if i+num_layers_per_channel in self.out_indices:
+        if REPEAT_FLAG and i+num_layers in self.out_indices:
+            outs.append(combined_output)
+        if not REPEAT_FLAG and i+num_layers_per_channel in self.out_indices:
             outs.append(combined_output)
     #part_b_output = self.layers_partB(combined_output)
 
@@ -109,14 +183,22 @@ def adjust_model(self, seperate_block, num_channels=1): #change the model struct
     # self.forward = forward
     #duplicate the first part
     self.layers_partA = nn.ModuleList()
-    for i in range(num_channels):
-        self.layers_partA = self.layers_partA + partA #nn.ModuleList(list(partA)).to('cuda:0')
+    if REPEAT_FLAG:
+        self.layers_partA = partA
+    else:
+        for i in range(num_channels):
+            self.layers_partA = self.layers_partA + partA #nn.ModuleList(list(partA)).to('cuda:0')
 
-    #add pointwise conv, resape the tensors before
+    #add pointwise conv, reshape the tensors before
     # tmp_weights = torch.FloatTensor(1, 4, 1, 1).uniform_(-1 / np.sqrt(4),
     #                                                               1 / np.sqrt(4))
     # self.pw_layer = conv_layer(4, 1, kernel_size=1, stride=1, bias=False)
     # self.pw_layer.weight = torch.nn.parameter.Parameter(tmp_weights)
+
+    #add attention, reshape the tensors before
+    self.attention = SelfAttention(INPUT_SHAPE)
+    #self.pw_layer = conv_layer(4, 1, kernel_size=1, stride=1, bias=False)
+    #self.pw_layer.weight = torch.nn.parameter.Parameter(tmp_weights)
 
     # Combine the ModuleLists
     # combined_list = nn.ModuleList()
@@ -346,9 +428,9 @@ def main(our_adjustments, image_num, metadata_flag, freeze_flag, train_layers, s
 
 if __name__ == '__main__':
     our_adjustments =True #replace the first layer with random values
-    image_num = 1
+    image_num = 4
     metadata_flag = False
-    seperate_block = 4
-    adjust_model_flag = False #adjust for separating the model
+    seperate_block = 6
+    adjust_model_flag = True #adjust for separating the model
     main(our_adjustments,image_num,metadata_flag,False,2,seperate_block, adjust_model_flag=adjust_model_flag)
 

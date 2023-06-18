@@ -20,7 +20,7 @@ from mmcls.utils import (auto_select_device, get_root_logger,
                          wrap_non_distributed_model)
 import torch.nn as nn
 import mmcls.models.backbones.efficientnet as efficientnet_orig
-MEAN = True
+MEAN = False
 
 def forward(self, x): #cont forward and combination
     # Part A

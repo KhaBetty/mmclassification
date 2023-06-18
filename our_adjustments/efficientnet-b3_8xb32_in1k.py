@@ -6,10 +6,10 @@ _base_ = [
     '../configs/_base_/default_runtime.py',
 ]
 #TODO resized gray images
-work_dir = '/home/maya/projA/runs/resized_64' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
-dataset_prefix = '/home/maya/Pictures/projA_pics/resized_64' #'/phome/maya/Pictures/projA_pics/dataset_balanced'#TODO
-multi_image_flag = False
-multi_num= 1 #number of channels in the input
+work_dir = '/home/maya/projA/runs/attention_w_filters_cropped_64_fixed_sum_sep_6' #'/home/maya/projA/runs/original_run_effecientnet' #TODO
+dataset_prefix = '/home/maya/Pictures/projA_pics/cropped_subpixel_64_4_fixed_depth_3' #'/phome/maya/Pictures/projA_pics/dataset_balanced'#TODO
+multi_image_flag = True
+multi_num= 4 #number of channels in the input
 max_epoch_num = 400 #150 #150
 shuffle_flag = False
 #load_from = '/home/maya/projA/runs/resized_32_rgb/epoch_50.pth'

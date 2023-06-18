@@ -37,6 +37,7 @@ class LinearClsHead(ClsHead):
 
     def pre_logits(self, x):
         if isinstance(x, tuple):
+         #   print('x',x) #TODO
             x = x[-1]
         return x
 
@@ -75,6 +76,7 @@ class LinearClsHead(ClsHead):
             return pred
 
     def forward_train(self, x, gt_label, **kwargs):
+
         x = self.pre_logits(x)
         cls_score = self.fc(x)
         losses = self.loss(cls_score, gt_label, **kwargs)

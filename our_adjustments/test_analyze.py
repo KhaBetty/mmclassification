@@ -1,7 +1,7 @@
 import json
 # Load the data from json files
 basic_path = '/home/maya/projA/runs'
-orig_folder= '/resized_32'
+orig_folder= '/resized_64'
 file_name = '/test_results.json'
 orig_path = basic_path + orig_folder +file_name
 mean_diff = {}
@@ -12,7 +12,7 @@ with open(orig_path) as f:
 	#calculate the mean of the data
 	mean = sum(data)/len(data)
 	mean_all[orig_folder] = mean
-	folders = ['/fixed_avg_sep_6','/fixed_max_sep_6','/fixed_point_wise_sep_6','/shuffle_fixed_avg_sep_6','/shuffle_fixed_max_sep_6','/subpixel_32_4_fixed_depth_4']
+	folders = ['/cropped_shuffle_64_fixed_AVG_sep_6','/cropped_shuffle_64_fixed_max_sep_6']
 	#defferent from list
 	for folder in folders:
          with open(basic_path + folder +file_name) as tmp:
